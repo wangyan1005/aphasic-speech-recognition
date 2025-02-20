@@ -14,6 +14,6 @@ This project focuses on aphasic speech recognition using the AphasiaBank dataset
 ## Data Processing
 The data preprocessing is based on https://github.com/Liting-Zhou/Aphasic_speech_recognition.
 I have added two new files:
-- **hours_analysis.py**:The provided scripts test the dataset and remove non-standard audio segments.
+- **test.py**:The provided scripts test the dataset and remove non-standard audio segments.
 - **hours_analysis.py**: The scripts extract and analyze the total speech duration for each speaker.
   
