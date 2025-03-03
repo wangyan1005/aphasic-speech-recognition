@@ -16,4 +16,6 @@ The data preprocessing is based on https://github.com/Liting-Zhou/Aphasic_speech
 I have added two new files:
 - **test.py**:The provided scripts test if the dataset has non-standard audio segments.
 - **hours_analysis.py**: The scripts extract and analyze the total speech duration for each speaker.
+- **extract_xvector_for_chunk.py**: extract xvector from audio chunks
+- **data_splitting**: Split the dataset into training (60%), validation (20%), and test (20%) sets
   
