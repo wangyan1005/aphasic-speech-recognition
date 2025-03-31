@@ -36,7 +36,7 @@ def extract_xvector_for_chunk(chunk_wav_path):
 
 def main():
     # load CSV file
-    csv_file_path = "/home/wang.yan8/Aphasic_speech_recognition/final_clean_dataset.csv"
+    csv_file_path = "../Aphasic_speech_recognition/final_clean_dataset.csv"
     df = pd.read_csv(csv_file_path)
 
     # Initialize a new column for storing x-vectors
@@ -46,7 +46,7 @@ def main():
     for idx, row in df.iterrows():
         folder_name = row["folder_name"]
         chunk_file = row["file_cut"]
-        audio_path = os.path.join("/home/wang.yan8/data_processed/audios", folder_name, chunk_file)
+        audio_path = os.path.join("../data_processed/audios", folder_name, chunk_file)
         
         if not os.path.exists(audio_path):
             print(f"File not found: {audio_path}")
@@ -63,7 +63,7 @@ def main():
         print(f"Extracted x-vector for {chunk_file}")
 
     # Save the updated dataset with extracted x-vectors
-    output_csv = "/home/wang.yan8/data_processed/final_clean_dataset_with_xvector.csv"
+    output_csv = "../data_processed/final_clean_dataset_with_xvector.csv"
     df.to_csv(output_csv, index=False)
     print(f"Saved new CSV with x-vector to {output_csv}")
 

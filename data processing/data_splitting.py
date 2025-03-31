@@ -12,7 +12,7 @@ if os.path.exists(output_path):
     os.remove(output_path)
 
 # Step 1: Load the dataset
-data_path = '/home/wang.yan8/data_processed/final_clean_dataset_with_xvector.csv'
+data_path = '../data_processed/final_clean_dataset_with_xvector.csv'
 df = pd.read_csv(data_path)
 
 # Step 2: Initialize an empty 'split' column
