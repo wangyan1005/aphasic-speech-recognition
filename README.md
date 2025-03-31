@@ -20,5 +20,26 @@ I have added new files:
 - **data_splitting.py**: Split the dataset into training (60%), validation (20%), and test (20%) sets
 
 ## Baseline Model Transcribe
-- **transcribe.py**
+- **transcribe.py**: The script transcribes the test set audio using Whisper model from Hugging Face's pipeline, and writes the detailed transcription results (including predictions and references) to a CSV file.
+- **wer_calculation.py**: This script reads the detailed transcription results and calculates the overall Word Error Rate (WER).
+
+## Training Models
+- **data_preparation.py**: Prepares and processes the dataset by reading a CSV file, loading audio files, extracting log-Mel features, and parsing x-vectors.
+- **data_collator.py**: Provides a data collator that pads input features and labels for speech recognition, and also processes x-vectors.
+- **personalized_whisper.py**: Implements the personalized Whisper model. This module integrates speaker-specific x-vector information with the log-Mel spectrogram features.
+- **compute_metrics.py**: Defines functions to compute the Word Error Rate (WER).
+- **training.py**: Contains the main training script. It loads the prepared dataset, applies LoRA to the base Whisper model (e.g., Whisper-Small).
+
+### Run Scripts Summary
+1. **Data Preparation**:
+ ```bash
+   python data_preparation.py
+ ```
+2. **Data Preparation**:
+```bash
+   python training.py --lora_rank 8
+```
+
+
+
   
