@@ -10,15 +10,16 @@ import os
 import ast  # Used to convert strings into lists
 
 def process_dataset():
-    # fix the model size
-    model_name = "openai/whisper-small",
+    # fix the model size, can be replaced with other Whisper models such as Whisper-medium
+    model_name = "openai/whisper-small"
 
     # load dataset
-    csv_file_path = '/home/wang.yan8/data_processed/dataset_splitted.csv'
+    csv_file_path = '../data_processed/dataset_splitted.csv'
     df = pd.read_csv(csv_file_path)
 
     columns_to_drop = ['mark_start', 'mark_end', 'name','sex','age','file','WAB_AQ','aphasia_type','WAB_AQ_category','fluency_speech','original_file_length','difference','name_extracted_from_filename','name_unique_speaker']
     df = df.drop(columns=columns_to_drop)
+
     dataset = Dataset.from_pandas(df)
 
     dataset_dict=DatasetDict()
@@ -29,13 +30,13 @@ def process_dataset():
     print("Data splitting finished.")
 
     # directory to save the processed audio dataset
-    processed_audio_data_path = f'/scratch/wang.yan8/processed_audio_dataset_small'
+    processed_audio_data_path = f'../processed_audio_dataset_small'
 
     # list to keep track of missing audio files
     missing_files = []
 
     def load_audio(batch):
-        audio_file_path = os.path.join("/home/wang.yan8/data_processed/audios", batch["folder_name"], batch["file_cut"])
+        audio_file_path = os.path.join("../data_processed/audios", batch["folder_name"], batch["file_cut"])
         # check if the file exists
         if os.path.exists(audio_file_path):
             try:
@@ -63,7 +64,7 @@ def process_dataset():
     # save the missing files to a CSV
     if missing_files:
         missing_files_df = pd.DataFrame(missing_files, columns=["missing_file_path"])
-        missing_files_df.to_csv("/home/wang.yan8/data_processed/missing_audio_files.csv", index=False)
+        missing_files_df.to_csv("../data_processed/missing_audio_files.csv", index=False)
         print("Missing audio files saved to 'missing_audio_files.csv'.")
     else:
         print("No missing audio files detected.")
@@ -74,36 +75,46 @@ def process_dataset():
     def prepare_dataset(batch):
         audio = batch["audio"]
         if audio is None or not audio["array"]:
-            print(f"Invalid or empty audio data for batch {batch}")
-            print(f"Audio is None or empty in file: {batch['file_cut']}")
+            print(f"Invalid or empty audio data for file: {batch.get('file_cut', 'unknown')}")
             batch["input_features"] = None
             batch["labels"] = None
-            return batch
-        
+            batch["xvector"] = [0.0] * 512 
+            return batch  
+    
         try:
             # compute log-Mel input features from input audio array
             batch["input_features"] = feature_extractor(audio["array"], sampling_rate=audio["sampling_rate"]).input_features[0]
+
             # encode target text to label ids
-            batch["labels"] = tokenizer(batch["transcriptions"]).input_ids
+            transcription = batch.get("transcriptions", "")
+            if isinstance(transcription, str) and transcription.strip(): 
+                batch["labels"] = tokenizer(transcription).input_ids
+            else:
+                print(f"Warning: Empty transcription for file {batch.get('file_cut', 'unknown')}")
+                batch["labels"] = []
+    
         except Exception as e:
-            print(f"Error processing audio: {e}")
+            print(f"Error processing audio or transcription: {e}")
             batch["input_features"] = None
-            batch["labels"] = None
-        
-        # Parse the pre-stored x-vector from the CSV(stored as a string)
+            batch["labels"] = []
+
+        # Parse x-vector
         if "xvector" in batch and isinstance(batch["xvector"], str):
             try:
                 parsed = ast.literal_eval(batch["xvector"])
-                # If the parsed result is a nested list with one element, extract it
                 if isinstance(parsed, list) and len(parsed) == 1 and isinstance(parsed[0], list):
                     batch["xvector"] = parsed[0]
                 else:
                     batch["xvector"] = parsed
             except Exception as e:
-                print(f"Error parsing xvector for file {batch['file_cut']}: {e}")
-                batch["xvector"] = None
+                print(f"Error parsing xvector for file {batch.get('file_cut', 'unknown')}: {e}")
+                batch["xvector"] = [0.0] * 512  
 
+        # Debug 
+        print(f"Processed file {batch.get('file_cut', 'unknown')}: input_features={type(batch['input_features'])}, labels={batch['labels']}, xvector={len(batch['xvector'])}")
+    
         return batch
+
 
     # prepare the datasets
     dataset_dict = dataset_dict.map(prepare_dataset, num_proc=6)
@@ -111,7 +122,7 @@ def process_dataset():
     print("finished preparing dataset")
 
     # save the dataset_dict
-    dataset_dict_path = f'/home/wang.yan8/data_processed/dataset_dict_small'
+    dataset_dict_path = f'../dataset_dict_small'
     dataset_dict.save_to_disk(dataset_dict_path)
     print("Dataset_dict saved to disk.")
 
