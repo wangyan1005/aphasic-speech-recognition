@@ -27,6 +27,7 @@ class XVectorFusion(nn.Module):
         self.activation = nn.ReLU()
         # Fusion layer: maps the concatenated features back to mel_dim
         self.fusion_linear = nn.Linear(mel_dim + projection_dim, mel_dim)
+
     
     def forward(self, mel_features, xvector):
         """
@@ -59,17 +60,58 @@ class PersonalizedWhisper(nn.Module):
         self.base_model = base_model
         # Fusion module to combine log-Mel features with x-vector information
         self.fusion_module = XVectorFusion(xvec_dim, projection_dim, mel_dim)
+        self._keys_to_ignore_on_save = []
     
-    def forward(self, input_features, ivector, **kwargs):
+    def generate(self, *args, **kwargs):
+        if "xvector" in kwargs:
+            kwargs.pop("xvector")
+        return self.base_model.generate(*args, **kwargs)
+    
+    def forward(self, input_features=None, xvector=None, **kwargs):
         """
         input_features: Tensor of shape [batch_size, T, mel_dim], the original log-Mel features
-        ivector: Tensor of shape [batch_size, xvec_dim], the pre-extracted x-vector
+        xvector: Tensor of shape [batch_size, xvec_dim], the pre-extracted x-vector
         kwargs: Additional arguments to be passed to the base model (e.g., attention_mask, labels, etc.)
         """
-        # Fuse the x-vector with the log-Mel features
-        fused_features = self.fusion_module(input_features, ivector)
-        # Pass the fused features to the base Whisper model for further processing
+        if xvector is None and "xvector" in kwargs:
+            xvector = kwargs.pop("xvector")
+
+        # If user forgot both positional and kwarg 'xvector', provide fallback or error
+        if xvector is None:
+            raise ValueError("xvector is missing! Ensure your data_collator or input dict includes 'xvector'.")
+
+        # If 'input_features' was also not provided, either fallback or error
+        if input_features is None and "input_features" in kwargs:
+            input_features = kwargs.pop("input_features")
+
+        if input_features is None:
+            raise ValueError("input_features is missing! Ensure your data_collator includes 'input_features'.")
+        
+
+        # Fuse x-vector + mel_features
+        fused_features = self.fusion_module(input_features, xvector)
+
+        # Now pass to base Whisper model
         return self.base_model(input_features=fused_features, **kwargs)
+        
+    @property
+    def generation_config(self):
+        """Expose the generation_config from the base model."""
+        return self.base_model.generation_config
+
+    @property
+    def config(self):
+        """Expose the config from the base model."""
+        return self.base_model.config
+
+    @property
+    def tokenizer(self):
+        """Expose the tokenizer from the base model if needed."""
+        return self.base_model.tokenizer
+    
+    def gradient_checkpointing_enable(self, **kwargs):
+        """Delegate gradient_checkpointing_enable to the base model."""
+        return self.base_model.gradient_checkpointing_enable(**kwargs)
 
 batch_size = 4
 T = 200
