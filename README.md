@@ -35,7 +35,7 @@ I have added new files:
  ```bash
    python data_preparation.py
  ```
-2. **Data Preparation**:
+2. **Training**:
 ```bash
    python training.py --lora_rank 8
 ```
