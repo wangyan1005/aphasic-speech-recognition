@@ -1,3 +1,4 @@
+# based on https://github.com/Liting-Zhou/Aphasic_speech_recognition/blob/main/transcribe.py
 # transcribe audio files using speech recognition models from Hugging Face's pipeline and save detailed transcription results to CSV files
 
 from transformers import pipeline
@@ -61,7 +62,7 @@ def run_all_transcriptions(csv_path, audio_root, models, detailed_results_folder
             "automatic-speech-recognition",
             model=model_name,
             device=0 if device == "cuda" else -1,  # 0 for GPU, -1 for CPU
-            framework="pt",  # added by Liting
+            framework="pt",  
         )
         
         file_name = model_name.replace("/", "_")
@@ -73,7 +74,7 @@ def run_all_transcriptions(csv_path, audio_root, models, detailed_results_folder
         torch.cuda.empty_cache() if device == "cuda" else None
 
 # # Main script to run the models and transcriptions
-csv_path = "/home/wang.yan8/data_processed/dataset_splitted.csv"
+csv_path = "../data_processed/dataset_splitted.csv"
 audio_root = "../data_processed/audios"
 models = ["openai/whisper-small"]
 detailed_results_folder = "../data_processed/detailed_wer_results"
