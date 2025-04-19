@@ -12,7 +12,7 @@ This project focuses on aphasic speech recognition using the AphasiaBank dataset
 - The model is fine-tuned using LoRA (Low-Rank Adaptation) to efficiently adapt to aphasic speech patterns.
 
 ## Data Processing
-The data preprocessing is based on https://github.com/Liting-Zhou/Aphasic_speech_recognition. Step1 to Step5 are the same and following the same scripts. My data process invloves speaker embedding x-vector.
+Data preprocessing (Step 1 to Step 5) is based on [Aphasic Speech Recognition](https://github.com/Liting-Zhou/Aphasic_speech_recognition). My approach extends the original pipeline by integrating speaker-specific embeddings (x-vectors).
 ### Step6: extract xvector from audio chunks
  ```bash
    python extract_xvector_for_chunk.py
@@ -25,6 +25,10 @@ The data preprocessing is based on https://github.com/Liting-Zhou/Aphasic_speech
 ## Baseline Model Transcribe
 - **transcribe.py**: The script transcribes the test set audio using Whisper model from Hugging Face's pipeline, and writes the detailed transcription results (including predictions and references) to a CSV file.
 - **wer_calculation.py**: This script reads the detailed transcription results and calculates the overall Word Error Rate (WER).
+```bash
+   transcribe.py
+   wer_calculation.py
+ ```
 
 ## Training Models (x-vector+LoRA)
 ### Step1:  Data Preparation
