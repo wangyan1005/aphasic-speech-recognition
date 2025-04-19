@@ -11,13 +11,13 @@ This project focuses on aphasic speech recognition using the AphasiaBank dataset
 - **Whisper Model**: A state-of-the-art speech recognition model developed by OpenAI.
 - The model is fine-tuned using LoRA (Low-Rank Adaptation) to efficiently adapt to aphasic speech patterns.
 
-## Data Processing
-### Environment Setup
+## Environment Setup
  ```bash
    module load python/3.8.1
-   pip install pylangacq numpy pandas sys os re 
+   pip install transformers datasets torchaudio peft jiwer pandas numpy
  ```
 
+## Data Processing
 Data preprocessing (Step 1 to Step 5) is performed using the same scripts provided by the [Aphasic Speech Recognition](https://github.com/Liting-Zhou/Aphasic_speech_recognition). My approach extends the original pipeline by integrating speaker-specific embeddings (x-vectors).
 ### Step6: extract xvector from audio chunks
  ```bash
@@ -39,11 +39,11 @@ Data preprocessing (Step 1 to Step 5) is performed using the same scripts provid
 ## Training Models 
 For training with LoRA and x-vectors, change directory:
 ```bash
-   cd training_whisper
+   cd training_whisper/
  ```
 For training without x-vectors, change directory:
 ```bash
-   cd training_whisper_without_xvectors
+   cd training_whisper_without_xvectors/
  ```
 
 ### Step1:  Data Preparation
@@ -64,8 +64,4 @@ For training without x-vectors, change directory:
 ### Step5: Evlaution
 - **compute_metrics.py**: Defines functions to compute the Word Error Rate (WER).
 
-## Display results
 
-
-
-  
