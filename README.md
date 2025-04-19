@@ -12,7 +12,13 @@ This project focuses on aphasic speech recognition using the AphasiaBank dataset
 - The model is fine-tuned using LoRA (Low-Rank Adaptation) to efficiently adapt to aphasic speech patterns.
 
 ## Data Processing
-Data preprocessing (Step 1 to Step 5) is based on [Aphasic Speech Recognition](https://github.com/Liting-Zhou/Aphasic_speech_recognition). My approach extends the original pipeline by integrating speaker-specific embeddings (x-vectors).
+### Environment Setup
+ ```bash
+   module load python/3.8.1
+   pip install pylangacq numpy pandas sys os re 
+ ```
+
+Data preprocessing (Step 1 to Step 5) is performed using the same scripts provided by the [Aphasic Speech Recognition](https://github.com/Liting-Zhou/Aphasic_speech_recognition). My approach extends the original pipeline by integrating speaker-specific embeddings (x-vectors).
 ### Step6: extract xvector from audio chunks
  ```bash
    python extract_xvector_for_chunk.py
@@ -30,16 +36,25 @@ Data preprocessing (Step 1 to Step 5) is based on [Aphasic Speech Recognition](h
    wer_calculation.py
  ```
 
-## Training Models (x-vector+LoRA)
+## Training Models 
+For training with LoRA and x-vectors, change directory:
+```bash
+   cd training_whisper
+ ```
+For training without x-vectors, change directory:
+```bash
+   cd training_whisper_without_xvectors
+ ```
+
 ### Step1:  Data Preparation
-- **data_preparation.py**:Prepares and processes the dataset by reading a CSV file, loading audio files, extracting log-Mel features, and parsing x-vectors.
+- **data_preparation.py**:Prepares and processes the dataset by reading a CSV file, loading audio files, extracting log-Mel features, and parsing x-vectors(if x-vector is invloved).
 ```bash
    python data_preparation.py
  ```
 ### Step2: Data Collation
-- **data_collator.py**: Provides a data collator that pads input features and labels for speech recognition, and also processes x-vectors.
+- **data_collator.py**: Provides a data collator that pads input features and labels for speech recognition, and also processes x-vectors(if x-vector is invloved).
   
-### Step3: Personalized Whisper Model
+### Step3: Personalized Whisper Model(only for integration with x-vectors)
 - **personalized_whisper.py**: Implements the personalized Whisper model. This module integrates speaker-specific x-vector information with the log-Mel spectrogram features.
 ### Step4: Training
 - **training.py**: The main training script. It loads the prepared dataset, applies LoRA to the Whisper-Small.
@@ -49,7 +64,7 @@ Data preprocessing (Step 1 to Step 5) is based on [Aphasic Speech Recognition](h
 ### Step5: Evlaution
 - **compute_metrics.py**: Defines functions to compute the Word Error Rate (WER).
 
-
+## Display results
 
 
 
