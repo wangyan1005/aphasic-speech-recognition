@@ -61,6 +61,7 @@ Training scripts are organized in two directories:
   
 ### Step4: Model Training 
 - **training.py**: The main training script: fine-tunes Whisper-small using LoRA on specific layers (default is decoder's MLP W1 layers).
+```bash
    python training.py
  ```
 Key parameters used in experiments:
