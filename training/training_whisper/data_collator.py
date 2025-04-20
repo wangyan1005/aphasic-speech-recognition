@@ -24,6 +24,7 @@ class DataCollatorSpeechSeq2SeqWithPadding:
                 raise KeyError(f"Feature {i} missing 'labels' key. Available keys: {available_keys}")
             label_features.append({"input_ids": feature["labels"]})
         
+        # pad the labels to max length
         labels_batch = self.processor.tokenizer.pad(label_features, return_tensors="pt")
 
         # replace padding with -100 to ignore loss correctly
@@ -41,4 +42,4 @@ class DataCollatorSpeechSeq2SeqWithPadding:
             xvector_list = [feature["xvector"] for feature in features]
             batch["xvector"] = torch.stack(xvector_list)
         return batch
-       
+        

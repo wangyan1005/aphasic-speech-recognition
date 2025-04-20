@@ -10,7 +10,6 @@ from data_collator import DataCollatorSpeechSeq2SeqWithPadding
 from compute_metrics import compute_metrics
 from peft import get_peft_model, LoraConfig, TaskType  # LoRA apply
 from personalized_whisper import PersonalizedWhisper
-# Debug inside Trainer
 from torch.utils.data import DataLoader
 
 # parse command-line arguments
@@ -18,7 +17,7 @@ parser = argparse.ArgumentParser(description="Train Whisper-small with LoRA on d
 parser.add_argument("--lora_rank", type=int, default=8, help="LoRA rank (e.g., 4, 8, 16). Default is 8.")
 args = parser.parse_args()
 
-# model size: Whisper-small (can be replaced with other Whisper models such as Whisper-medium) 
+# model size: Whisper-small
 model_id = "openai/whisper-small"
 
 # check if GPU is available
@@ -26,7 +25,7 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 # load dataset
-dataset_path = "../dataset_dict_small"
+dataset_path = "/scratch/wang.yan8/dataset_dict_small"
 dataset_dict = load_from_disk(dataset_path)
 
 print("Dataset loaded.")
@@ -54,13 +53,12 @@ print("Sample keys:", sample.keys())
 base_model = WhisperForConditionalGeneration.from_pretrained(model_id)
 base_model.to(device)
 
-# get the names of the decoder's MLP W1 layer modules
+# Apply LoRA in decoder's MLP W1 layer
 decoder_fc1_modules = []
 for name, module in base_model.named_modules():
     if "decoder" in name and "fc1" in name:
         decoder_fc1_modules.append(name)
 
-# Apply LoRA in decoder's MLP W1 layer
 lora_config = LoraConfig(
     r=args.lora_rank,  # LoRA (4, 8, 16)
     lora_alpha=32,  # LoRA scaling factor
@@ -99,9 +97,9 @@ training_args = Seq2SeqTrainingArguments(
     output_dir=f"../../trained_models/whisper-small-lora-w1-{args.lora_rank}",
     per_device_train_batch_size=8,
     gradient_accumulation_steps=4,
-    learning_rate=3e-6,
-    warmup_steps=2000,
-    max_steps=15000,
+    learning_rate=5e-6,
+    warmup_steps=1000,
+    max_steps=14000,
     gradient_checkpointing=True,
     fp16=True,
     eval_strategy="steps",
@@ -151,36 +149,29 @@ trainer = Seq2SeqTrainer(
 processor.save_pretrained(training_args.output_dir)
 torch.cuda.empty_cache()
 
-# get the total and trainable parameters
 total_params = sum(p.numel() for p in model.parameters())
 trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"Total parameters: {total_params}")
 print(f"Trainable parameters: {trainable_params}")
 
-print(f"Starting LoRA fine-tuning on decoder MLP W1 (rank={args.lora_rank})...")
 
-# calculate training time
+print(f"Starting LoRA fine-tuning on decoder MLP W1 (rank={args.lora_rank})...")
 start_time = time.time()
 trainer.train(resume_from_checkpoint=checkpoint)
 end_time = time.time()
 session_time = end_time - start_time
-
       
 time_file = "total_training_time.txt"
-
 if os.path.exists(time_file):
     with open(time_file, "r", encoding="utf-8") as f:
         total_time = float(f.read().strip())
 else:
     total_time = 0
 
-
 total_time += session_time
-
 
 with open(time_file, "w", encoding="utf-8") as f:
     f.write(str(total_time))
-
 
 print(f"Total training time across sessions: {total_time:.2f} seconds.")
 trainer.save_model(training_args.output_dir)
@@ -190,3 +181,4 @@ print("Evaluating on the test dataset...")
 predictions = trainer.predict(test_dataset=test_dataset)
 print("Predictions:", predictions)
 print(predictions.metrics)
+

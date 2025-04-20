@@ -70,22 +70,22 @@ class PersonalizedWhisper(nn.Module):
     def forward(self, input_features=None, xvector=None, **kwargs):
         """
         input_features: Tensor of shape [batch_size, T, mel_dim], the original log-Mel features
-        xvector: Tensor of shape [batch_size, xvec_dim], the pre-extracted x-vector
+        ivector: Tensor of shape [batch_size, xvec_dim], the pre-extracted x-vector
         kwargs: Additional arguments to be passed to the base model (e.g., attention_mask, labels, etc.)
         """
         if xvector is None and "xvector" in kwargs:
             xvector = kwargs.pop("xvector")
 
-        # If user forgot both positional and kwarg 'xvector', provide fallback or error
+        # If forgot both positional and kwarg 'xvector', provide fallback or error
         if xvector is None:
-            raise ValueError("xvector is missing! Ensure your data_collator or input dict includes 'xvector'.")
+            raise ValueError("xvector is missing! Ensure data_collator or input dict includes 'xvector'.")
 
         # If 'input_features' was also not provided, either fallback or error
         if input_features is None and "input_features" in kwargs:
             input_features = kwargs.pop("input_features")
 
         if input_features is None:
-            raise ValueError("input_features is missing! Ensure your data_collator includes 'input_features'.")
+            raise ValueError("input_features is missing! Ensure data_collator includes 'input_features'.")
         
 
         # Fuse x-vector + mel_features

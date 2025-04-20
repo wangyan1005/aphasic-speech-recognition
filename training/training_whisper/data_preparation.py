@@ -10,11 +10,11 @@ import os
 import ast  # Used to convert strings into lists
 
 def process_dataset():
-    # fix the model size, can be replaced with other Whisper models such as Whisper-medium
+    # fix the model size
     model_name = "openai/whisper-small"
 
     # load dataset
-    csv_file_path = '../data_processed/dataset_splitted.csv'
+    csv_file_path = '/home/wang.yan8/data_processed/dataset_splitted.csv'
     df = pd.read_csv(csv_file_path)
 
     columns_to_drop = ['mark_start', 'mark_end', 'name','sex','age','file','WAB_AQ','aphasia_type','WAB_AQ_category','fluency_speech','original_file_length','difference','name_extracted_from_filename','name_unique_speaker']
@@ -30,13 +30,13 @@ def process_dataset():
     print("Data splitting finished.")
 
     # directory to save the processed audio dataset
-    processed_audio_data_path = f'../processed_audio_dataset_small'
+    processed_audio_data_path = f'/scratch/wang.yan8/processed_audio_dataset_small'
 
     # list to keep track of missing audio files
     missing_files = []
 
     def load_audio(batch):
-        audio_file_path = os.path.join("../data_processed/audios", batch["folder_name"], batch["file_cut"])
+        audio_file_path = os.path.join("/home/wang.yan8/data_processed/audios", batch["folder_name"], batch["file_cut"])
         # check if the file exists
         if os.path.exists(audio_file_path):
             try:
@@ -64,7 +64,7 @@ def process_dataset():
     # save the missing files to a CSV
     if missing_files:
         missing_files_df = pd.DataFrame(missing_files, columns=["missing_file_path"])
-        missing_files_df.to_csv("../data_processed/missing_audio_files.csv", index=False)
+        missing_files_df.to_csv("/home/wang.yan8/data_processed/missing_audio_files.csv", index=False)
         print("Missing audio files saved to 'missing_audio_files.csv'.")
     else:
         print("No missing audio files detected.")
@@ -116,13 +116,12 @@ def process_dataset():
         return batch
 
 
-    # prepare the datasets
     dataset_dict = dataset_dict.map(prepare_dataset, num_proc=6)
 
     print("finished preparing dataset")
 
     # save the dataset_dict
-    dataset_dict_path = f'../dataset_dict_small'
+    dataset_dict_path = f'/scratch/wang.yan8/dataset_dict_small'
     dataset_dict.save_to_disk(dataset_dict_path)
     print("Dataset_dict saved to disk.")
 
