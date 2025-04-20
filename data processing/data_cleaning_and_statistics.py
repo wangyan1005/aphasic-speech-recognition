@@ -20,11 +20,11 @@ def clean_dataset(file_path):
 
     # get total number of rows before cleaning up
     num_rows = df.shape[0]
-    print(f"Total rows: {num_rows}") # 129295
+    print(f"Total rows: {num_rows}")
 
     df['difference'] = df.iloc[:, 1] - df.iloc[:, 0]
     # get the total duration
-    sum_duration = df['difference'].sum()/1000/60/60 # 143.52 hours
+    sum_duration = df['difference'].sum()/1000/60/60 
     print(f"The total duration of all audios: {sum_duration} hours")
 
     #----------------------------------------------------------------
@@ -66,21 +66,21 @@ def clean_dataset(file_path):
     # print number of rows with audios longer than 30 seconds
     if not large_differences.empty:
         num_large_differences = large_differences.shape[0] 
-        print(f"Number of rows with differences larger than 30,000: {num_large_differences}") # 341
+        print(f"Number of rows with differences larger than 30,000: {num_large_differences}") 
     else:
         print("No differences larger than 30,000 found.")
     
     # print number of rows with audios shorter than 0.3 seconds
     if not small_differences.empty:
         num_small_differences = small_differences.shape[0]
-        print(f"Number of rows with differences smaller than 300: {num_small_differences}") # 7120
+        print(f"Number of rows with differences smaller than 300: {num_small_differences}") 
     else:
         print("No differences smaller than 300 found.")
     
     # print number of rows with empty transcripts
     if not empty_transcripts.empty:
         num_empty_transcripts = empty_transcripts.shape[0]
-        print(f"Number of rows with empty_transcripts: {num_empty_transcripts}") #738
+        print(f"Number of rows with empty_transcripts: {num_empty_transcripts}")
     else:
         print("No empty transcripts found.")
 
@@ -88,7 +88,7 @@ def clean_dataset(file_path):
     rows_to_drop = pd.concat([large_differences, small_differences, empty_transcripts]).drop_duplicates()
     if not rows_to_drop.empty:
         num_rows_dropped = rows_to_drop.shape[0]
-        print(f"Dropping {num_rows_dropped} rows.") #7954
+        print(f"Dropping {num_rows_dropped} rows.") 
         df = df.drop(rows_to_drop.index)
     else:
         print("No rows to drop based on the given criteria.")
