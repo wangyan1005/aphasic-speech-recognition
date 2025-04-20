@@ -64,7 +64,8 @@ lora_config = LoraConfig(
     r=args.lora_rank,  # LoRA (4, 8, 16)
     lora_alpha=32,  # LoRA scaling factor
     lora_dropout=0.1,  # Dropout rate
-    target_modules=decoder_fc1_modules,   
+    target_modules=decoder_fc1_modules,
+    # if apply LoRA to all MLP W1 layers(encoder + decoder), set target_modules=["fc1"]
 )
 
 base_model = get_peft_model(base_model, lora_config)  # Apply LoRA
