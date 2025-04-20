@@ -10,12 +10,12 @@ from datasets import load_from_disk
 from data_collator import DataCollatorSpeechSeq2SeqWithPadding
 from compute_metrics import compute_metrics
 from peft import get_peft_model, LoraConfig, TaskType  # LoRA apply
-from personalized_whisper import PersonalizedWhisper
+import glob
 from torch.utils.data import DataLoader
 
 # parse command-line arguments
 parser = argparse.ArgumentParser(description="Train Whisper-small with LoRA on decoder MLP W1 layer.")
-parser.add_argument("--lora_rank", type=int, default=8, help="LoRA rank (e.g., 4, 8, 16). Default is 8.")
+parser.add_argument("--lora_rank", type=int, default=64, help="LoRA rank (e.g., 4, 8, 16). Default is 8.")
 args = parser.parse_args()
 
 # model size: Whisper-small
@@ -26,37 +26,22 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 # load dataset
-dataset_path = "/scratch/wang.yan8/dataset_dict_small"
+dataset_path = "/scratch/wang.yan8/dataset_dict_small_without_xvector"
 dataset_dict = load_from_disk(dataset_path)
 
 print("Dataset loaded.")
 
-columns_to_keep = ["input_features", "labels", "xvector"]
-dataset_dict["train"] = dataset_dict["train"].with_format("torch", columns=columns_to_keep)
-dataset_dict["eval"] = dataset_dict["eval"].with_format("torch", columns=columns_to_keep)
-dataset_dict["test"] = dataset_dict["test"].with_format("torch", columns=columns_to_keep)
 train_dataset = dataset_dict["train"]
 eval_dataset = dataset_dict["eval"]
 test_dataset = dataset_dict["test"]
 
-for split in ["train", "eval", "test"]:
-    dataset = dataset_dict[split]
-    for idx in range(min(10, len(dataset))):  
-        sample = dataset[idx]
-        if 'labels' not in sample:
-            print(f"Error: Split {split}, sample {idx} missing 'labels' key.")
-
-sample = dataset_dict["train"][0]
-print("Sample keys:", sample.keys())
-
-
 # load base Whisper model
-base_model = WhisperForConditionalGeneration.from_pretrained(model_id)
-base_model.to(device)
+model = WhisperForConditionalGeneration.from_pretrained(model_id)
+model.to(device)
 
 # Apply LoRA in decoder's MLP W1 layer
 decoder_fc1_modules = []
-for name, module in base_model.named_modules():
+for name, module in model.named_modules():
     if "decoder" in name and "fc1" in name:
         decoder_fc1_modules.append(name)
 
@@ -67,14 +52,10 @@ lora_config = LoraConfig(
     target_modules=decoder_fc1_modules,   
 )
 
-base_model = get_peft_model(base_model, lora_config)  # Apply LoRA
+model = get_peft_model(model, lora_config) # Apply LoRA
+model.enable_input_require_grads()
 print(f"Applied LoRA to decoder MLP W1 layer with rank {args.lora_rank}.")
 
-# Wrap base model with PersonalizedWhisper to fuse x-vector with log-Mel features
-xvec_dim = 512
-projection_dim = 64
-mel_dim = 3000
-model = PersonalizedWhisper(base_model, xvec_dim, projection_dim, mel_dim)
 model.to(device)
 
 model.generation_config.language = "English"
@@ -90,12 +71,10 @@ data_collator = DataCollatorSpeechSeq2SeqWithPadding(
 )
 print("Data collator finished.")
 
-collated_batch = data_collator([dataset_dict["train"][0], dataset_dict["train"][1]])
-print("Collated batch keys:", collated_batch.keys())
 
 # define training arguments
 training_args = Seq2SeqTrainingArguments(
-    output_dir=f"../../trained_models/whisper-small-lora-w1-{args.lora_rank}",
+    output_dir=f"/scratch/wang.yan8/trained_models/whisper-small-LORA-w1-{args.lora_rank}",
     per_device_train_batch_size=8,
     gradient_accumulation_steps=4,
     learning_rate=5e-6,
@@ -116,7 +95,6 @@ training_args = Seq2SeqTrainingArguments(
     greater_is_better=False,
     push_to_hub=False,
     save_total_limit=2,
-    remove_unused_columns=False,
     save_safetensors=False,
     
 )
@@ -154,15 +132,33 @@ total_params = sum(p.numel() for p in model.parameters())
 trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"Total parameters: {total_params}")
 print(f"Trainable parameters: {trainable_params}")
-
+for name, p in model.named_parameters():
+    if p.requires_grad:
+        print(" LoRA param:", name)
 
 print(f"Starting LoRA fine-tuning on decoder MLP W1 (rank={args.lora_rank})...")
 start_time = time.time()
+if checkpoint:
+    print(f"Resuming from checkpoint: {checkpoint}")
+
+    # Remove old optimizer and scheduler state so they won't be loaded
+    for pattern in ["optimizer*.pt", "scheduler*.pt"]:
+        for path in glob.glob(os.path.join(checkpoint, pattern)):
+            try:
+                os.remove(path)
+                print(f"Deleted {path}")
+            except OSError:
+                print(f"Failed to delete {path}")
+
+else:
+    print("No checkpoint found. Starting fresh training.")
+
 trainer.train(resume_from_checkpoint=checkpoint)
 end_time = time.time()
 session_time = end_time - start_time
-      
+
 time_file = "total_training_time.txt"
+
 if os.path.exists(time_file):
     with open(time_file, "r", encoding="utf-8") as f:
         total_time = float(f.read().strip())
@@ -173,6 +169,7 @@ total_time += session_time
 
 with open(time_file, "w", encoding="utf-8") as f:
     f.write(str(total_time))
+
 
 print(f"Total training time across sessions: {total_time:.2f} seconds.")
 trainer.save_model(training_args.output_dir)
