@@ -1,4 +1,4 @@
-# https://github.com/Liting-Zhou/Aphasic_speech_recognition/blob/main/data_splitting.py
+# based on https://github.com/Liting-Zhou/Aphasic_speech_recognition/blob/main/data_splitting.py
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
