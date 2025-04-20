@@ -1,5 +1,5 @@
 # based on https://huggingface.co/blog/fine-tune-whisper
-# https://huggingface.co/docs/peft/task_guides/lora_based_methods
+# based on https://huggingface.co/docs/peft/task_guides/lora_based_methods
 
 import argparse
 import os
