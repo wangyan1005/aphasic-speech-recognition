@@ -83,4 +83,7 @@ Upon completion, results include:
 ## Future Work
 Future work should explore more sophisticated fusion mechanisms that better leverage speaker-specific information within the LoRA adaptation framework, potentially incorporating attention mechanisms or gated integration to allow more dynamic and context-sensitive use of speaker information.
 
+## HuggingFace for model
+The LoRA-only fine-tuned model has been uploaded, as it demonstrated better recognition performance.
+- **https://huggingface.co/yan05/whisper-aphasia-lora**
 
