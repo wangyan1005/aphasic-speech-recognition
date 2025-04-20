@@ -49,12 +49,12 @@ Training scripts are organized in two directories:
  ```
 
 ### Step1:  Data Preparation
-- **data_preparation.py**:Prepares and processes the dataset by reading a CSV file, loading audio files, extracting log-Mel features, and parsing x-vectors(if x-vector is invloved).
+- **data_preparation.py**:Prepares and processes the dataset by reading a CSV file, loading audio files, extracting log-Mel features, and parsing x-vectors(if applicable).
 ```bash
    python data_preparation.py
  ```
 ### Step2: Data Collation
-- **data_collator.py**: Provides a data collator that pads input features and labels for speech recognition, and also processes x-vectors(if x-vector is invloved).
+- **data_collator.py**: Provides a data collator that pads input features and labels for speech recognition, and also processes x-vectors(if applicable).
   
 ### Step3: Personalized Whisper Model(only for x-vector integration)
 - **personalized_whisper.py**: Implements the personalized Whisper model. This module integrates speaker-specific x-vector information with the log-Mel spectrogram features.
@@ -64,7 +64,7 @@ Training scripts are organized in two directories:
 ```bash
    python training.py
  ```
-Key parameters used in experiments:
+#### Key parameters used in experiments:
 - **LoRA rank (r)**: 8, 64, 128, 256
 - **LoRA alpha scaling factor (α)**: 32
 - **Training steps**: 14,000
@@ -79,4 +79,8 @@ Key parameters used in experiments:
 Upon completion, results include:
 - Fine-tuned model checkpoints (trained_models/)
 - WER metrics
+
+## Future Work
+Future work should explore more sophisticated fusion mechanisms that better leverage speaker-specific information within the LoRA adaptation framework, potentially incorporating attention mechanisms or gated integration to allow more dynamic and context-sensitive use of speaker information.
+
 
