@@ -70,7 +70,7 @@ class PersonalizedWhisper(nn.Module):
     def forward(self, input_features=None, xvector=None, **kwargs):
         """
         input_features: Tensor of shape [batch_size, T, mel_dim], the original log-Mel features
-        ivector: Tensor of shape [batch_size, xvec_dim], the pre-extracted x-vector
+        xvector: Tensor of shape [batch_size, xvec_dim], the pre-extracted x-vector
         kwargs: Additional arguments to be passed to the base model (e.g., attention_mask, labels, etc.)
         """
         if xvector is None and "xvector" in kwargs:
